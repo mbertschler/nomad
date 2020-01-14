@@ -229,6 +229,11 @@ func (c *CSIVolumeChecker) hasPlugins(n *structs.Node) bool {
 	}
 
 	for _, req := range c.volumes {
+		vol, err := c.ctx.State().CSIVolumeByID(req.Source)
+		if err != nil {
+			return false
+		}
+
 		plugin, ok := n.CSINodePlugins[req.Name]
 		if !(ok &&
 			plugin.Healthy &&
