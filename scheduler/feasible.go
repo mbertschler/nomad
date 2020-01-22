@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	memdb "github.com/hashicorp/go-memdb"
 	version "github.com/hashicorp/go-version"
 	"github.com/hashicorp/nomad/helper/constraints/semver"
 	"github.com/hashicorp/nomad/nomad/structs"
@@ -228,16 +229,22 @@ func (c *CSIVolumeChecker) hasPlugins(n *structs.Node) bool {
 		return false
 	}
 
+	ws := memdb.NewWatchSet()
 	for _, req := range c.volumes {
-		vol, err := c.ctx.State().CSIVolumeByID(req.Source)
+		// Check that this node has a healthy running plugin with the right PluginID
+		plugin, ok := n.CSINodePlugins[req.Name]
+		if !(ok && plugin.Healthy) {
+			return false
+		}
+
+		// Get the volume to check that it's healthy (there's a healthy controller
+		// and the volume hasn't encountered an error or been marked for GC
+		vol, err := c.ctx.State().CSIVolumeByID(ws, req.Source)
 		if err != nil {
 			return false
 		}
 
-		plugin, ok := n.CSINodePlugins[req.Name]
-		if !(ok &&
-			plugin.Healthy &&
-			plugin.PluginID == req.Name) {
+		if !vol.Healthy {
 			return false
 		}
 	}
