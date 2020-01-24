@@ -240,7 +240,6 @@ func TestServiceStack_Select_CSI(t *testing.T) {
 
 	// Create a volume in the state store
 	v := structs.NewCSIVolume("foo")
-	v.Driver = "adam"
 	v.Namespace = structs.DefaultNamespace
 	v.AccessMode = structs.CSIVolumeAccessModeMultiNodeSingleWriter
 	v.AttachmentMode = structs.CSIVolumeAttachmentModeFilesystem
