@@ -239,12 +239,9 @@ func (c *CSIVolumeChecker) hasPlugins(n *structs.Node) bool {
 
 		// Get the volume to check that it's healthy (there's a healthy controller
 		// and the volume hasn't encountered an error or been marked for GC
-		vol, err := c.ctx.State().CSIVolumeByID(ws, req.Source)
-		if err != nil {
-			return false
-		}
+		vol, err := c.ctx.State().CSIVolumeByIDPlugins(ws, req.Source)
 
-		if !vol.Healthy {
+		if err != nil || vol == nil || !vol.Healthy {
 			return false
 		}
 	}
