@@ -1627,6 +1627,10 @@ func (s *StateStore) CSIVolumeRegister(index uint64, volumes []*structs.CSIVolum
 			return fmt.Errorf("volume exists: %s", v.ID)
 		}
 
+		if v.CreateIndex == 0 {
+			v.CreateIndex = index
+		}
+
 		err = txn.Insert("csi_volumes", v)
 		if err != nil {
 			return fmt.Errorf("volume insert: %v", err)
@@ -1656,6 +1660,19 @@ func (s *StateStore) CSIVolumeByID(ws memdb.WatchSet, id string) (*structs.CSIVo
 	vol.Healthy = false
 
 	return vol, nil
+}
+
+// CSIVolumeByIDPlugins is used to lookup a volume and denormalize it with plugins
+func (s *StateStore) CSIVolumeByIDPlugins(ws memdb.WatchSet, id string) (*structs.CSIVolume, error) {
+	vol, err := s.CSIVolumeByID(ws, id)
+	if err != nil {
+		return nil, err
+	}
+	if vol == nil {
+		return nil, nil
+	}
+
+	return s.CSIVolumeDenormalizePlugins(ws, vol)
 }
 
 // CSIVolumes looks up csi_volumes by pluginID
