@@ -1284,18 +1284,3 @@ func newSemverConstraintParser(ctx Context) verConstraintParser {
 		return constraints
 	}
 }
-
-// filterConstraintsTransient is true if one filtered node was filtered by a transient
-// property of a node which depends on health in order to be true. This supports blocking
-// evaluations for those nodes to allow scheduling when the properties become healthy
-func filterConstraintsTransient(metrics *structs.AllocMetric) bool {
-	for k, len := range metrics.ConstraintFiltered {
-		switch k {
-		case FilterConstraintHostVolumes, FilterConstraintCSIVolumes, FilterConstraintDrivers, FilterConstraintDevices:
-			if len > 0 {
-				return true
-			}
-		}
-	}
-	return false
-}
